@@ -1,0 +1,536 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+<title>DODGEBALL DUEL</title>
+<style>
+  :root { --ink:#15162b; --navy:#202648; --cream:#fff1b8; --yellow:#ffd84e; --pink:#ff5678; --cyan:#56e6d0; --blue:#57a8ff; --panel:#282d54; --muted:#aeb4d4; }
+  * { box-sizing:border-box; }
+  html,body { margin:0; min-height:100%; background:#111329; color:var(--cream); font-family:'Courier New',monospace; }
+  body { min-height:100vh; display:flex; align-items:center; justify-content:center; padding:clamp(8px,1.4vw,20px); overflow-x:hidden; background:radial-gradient(ellipse at 50% 0%,#343567 0,#171934 58%,#0b0c1b 100%); }
+  button,input { font:inherit; }
+  button { border:0; color:var(--ink); background:var(--yellow); font-weight:900; text-transform:uppercase; cursor:pointer; padding:12px 16px; box-shadow:0 5px 0 #a96a31; border-radius:2px; transition:transform .08s,filter .08s; }
+  button:hover { filter:brightness(1.08); transform:translateY(-1px); }
+  button:active { transform:translateY(3px); box-shadow:0 2px 0 #a96a31; }
+  button.secondary { background:#b8c4f3; box-shadow:0 5px 0 #606b9f; }
+  button.cyan { background:var(--cyan); box-shadow:0 5px 0 #228c89; }
+  button.pink { background:var(--pink); box-shadow:0 5px 0 #9e2e58; color:white; }
+  button:disabled { opacity:.5; cursor:default; transform:none; }
+  .cabinet { width:min(100%,1400px); border:4px solid var(--yellow); background:#161832; box-shadow:0 0 0 4px #161832,0 0 0 8px #4d3971,0 18px 50px #0009; padding:clamp(14px,2vw,30px); position:relative; }
+  .cabinet:before,.cabinet:after { content:'✦  ✦  ✦'; position:absolute; top:-29px; color:var(--pink); letter-spacing:13px; font-size:14px; left:12px; }
+  .cabinet:after { left:auto; right:12px; color:var(--cyan); }
+  header { display:flex; gap:12px; align-items:center; justify-content:space-between; margin-bottom:14px; border-bottom:2px dashed #545a88; padding-bottom:12px; }
+  .brand { display:flex; align-items:center; gap:11px; }
+  .logo { width:48px; height:48px; display:grid; place-items:center; background:var(--pink); border:3px solid var(--cream); box-shadow:4px 4px 0 #801e59; color:white; font-size:26px; }
+  h1 { margin:0; font-size:clamp(25px,3.1vw,42px); letter-spacing:1.5px; line-height:1; text-shadow:3px 3px 0 #a82d68; }
+  .subtitle { font-size:clamp(10px,1vw,13px); letter-spacing:2px; color:var(--cyan); margin-top:7px; }
+  .highscore { color:var(--yellow); font-size:clamp(12px,1.1vw,15px); text-align:right; line-height:1.7; white-space:nowrap; }
+  .screen { display:none; }
+  .screen.active { display:block; }
+  .menuGrid { display:grid; grid-template-columns:minmax(0,1.4fr) minmax(290px,.8fr); gap:20px; }
+  .hero { background:#24284d; border:3px solid #6870a6; padding:clamp(20px,2.4vw,34px); position:relative; overflow:hidden; min-height:390px; }
+  .hero:after { content:'INSERT COIN'; position:absolute; bottom:15px; left:0; right:0; text-align:center; font-weight:900; letter-spacing:4px; color:var(--yellow); animation:blink 1.1s steps(2,start) infinite; }
+  @keyframes blink { to { visibility:hidden; } }
+  .gameTitle { font-weight:1000; font-size:clamp(42px,5.3vw,76px); line-height:.94; letter-spacing:-2px; color:var(--yellow); text-shadow:4px 4px 0 #de476f,8px 8px 0 #17172d; margin:12px 0 22px; }
+  .hero p { max-width:600px; color:#e4e7ff; line-height:1.65; font-size:clamp(15px,1.25vw,18px); }
+  .miniCourt { display:flex; gap:8px; align-items:center; margin:22px 0; color:var(--ink); font-weight:900; font-size:13px; }
+  .miniTeam { width:72px; height:38px; border:2px solid var(--cream); background:var(--pink); display:grid; place-items:center; color:white; }
+  .miniTeam.blue { background:var(--blue); }
+  .miniMid { flex:1; border-top:2px dashed #d9e3ab; text-align:center; color:var(--cream); }
+  .sidePanel { background:#1b1f3e; border:3px solid #424a7d; padding:clamp(16px,1.8vw,25px); display:flex; flex-direction:column; gap:14px; }
+  .panelLabel { color:var(--cyan); font-size:clamp(12px,1vw,15px); letter-spacing:2px; margin-bottom:2px; }
+  .sidePanel button { width:100%; text-align:left; font-size:clamp(14px,1.15vw,17px); padding:17px; }
+  .sidePanel button small { display:block; font-size:clamp(10px,.85vw,12px); opacity:.8; margin-top:5px; letter-spacing:1px; }
+  .helpText { color:var(--muted); font-size:12px; line-height:1.7; margin-top:auto; border-top:1px dashed #424a7d; padding-top:13px; }
+  .gameShell { border:3px solid #7478a6; background:#101328; padding:clamp(8px,1.1vw,14px); }
+  .gameTop { display:flex; align-items:center; justify-content:space-between; gap:12px; margin-bottom:12px; padding:5px 6px; flex-wrap:wrap; }
+  .hudTeam { display:flex; gap:9px; align-items:center; min-width:0; font-weight:900; font-size:clamp(13px,1.25vw,18px); }
+  .swatch { width:16px; height:16px; display:inline-block; border:2px solid var(--cream); flex:none; }
+  .hudCenter { text-align:center; color:var(--yellow); font-weight:900; font-size:clamp(15px,1.45vw,20px); white-space:nowrap; }
+  .smallButton { padding:10px 13px; font-size:clamp(11px,1vw,14px); box-shadow:0 3px 0 #a96a31; }
+  .canvasWrap { width:100%; position:relative; background:#0d1327; overflow:hidden; border:2px solid #101328; }
+  canvas { display:block; width:100%; height:auto; aspect-ratio:16/9; image-rendering:pixelated; image-rendering:crisp-edges; touch-action:none; }
+  .gameBottom { display:flex; justify-content:space-between; gap:10px; color:var(--muted); font-size:clamp(11px,1vw,14px); padding:12px 4px 4px; flex-wrap:wrap; }
+  .modeTag { color:var(--cyan); }
+  .lobby { background:#22264a; border:3px solid #626ba0; padding:clamp(18px,3vw,34px); max-width:900px; margin:auto; }
+  .lobby h2 { margin:0 0 12px; color:var(--yellow); font-size:clamp(27px,3vw,38px); }
+  .lobby p { color:#d0d6f4; line-height:1.65; font-size:clamp(14px,1.2vw,17px); }
+  .difficultyGrid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:14px; margin:22px 0; }
+  .difficultyCard { min-height:112px; text-align:left; padding:20px; font-size:clamp(18px,2vw,25px); border:3px solid #fff1b8; line-height:1.3; }
+  .difficultyCard small { display:block; margin-top:8px; font-size:clamp(11px,1vw,14px); letter-spacing:1px; }
+  .difficultyCard.easy { background:#56e6d0; box-shadow:0 5px 0 #228c89; }
+  .difficultyCard.medium { background:#ffd84e; box-shadow:0 5px 0 #a96a31; }
+  .difficultyCard.hard { background:#ff9e56; box-shadow:0 5px 0 #a34b32; }
+  .difficultyCard.impossible { background:#ff5678; box-shadow:0 5px 0 #9e2e58; color:white; }
+  .difficultyCard.impossible small { color:#fff5c7; }
+  .lobbyActions { display:grid; grid-template-columns:1fr 1fr; gap:10px; margin:14px 0; }
+  .joinRow { display:flex; gap:8px; margin-top:8px; }
+  input { width:100%; min-width:0; background:#101328; color:var(--cream); border:2px solid #777fb3; padding:12px; outline:none; text-transform:uppercase; }
+  input:focus { border-color:var(--cyan); }
+  .roomCode { font-size:clamp(18px,4vw,26px); color:var(--yellow); letter-spacing:2px; background:#11142a; padding:13px; border:2px dashed #737ba6; overflow-wrap:anywhere; user-select:all; margin:10px 0; }
+  .status { color:var(--cyan)!important; min-height:20px; }
+  .controlsGrid { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+  .controlCard { background:#22264a; border:2px solid #4d558a; padding:14px; }
+  .controlCard h3 { margin:0 0 12px; color:var(--yellow); font-size:16px; }
+  .keyRow { display:flex; align-items:center; justify-content:space-between; gap:10px; border-bottom:1px dashed #434b78; padding:10px 0; color:#dfe3ff; font-size:14px; }
+  kbd { background:#0d1024; border:1px solid #737ba6; box-shadow:0 2px 0 #737ba6; padding:5px 8px; color:white; white-space:nowrap; font-family:inherit; font-size:12px; }
+  footer { text-align:center; color:#777fae; font-size:11px; letter-spacing:1.3px; margin-top:18px; }
+  .touchControls { display:none; gap:8px; justify-content:space-between; margin-top:10px; }
+  .touchControls button { padding:16px 12px; flex:1; touch-action:manipulation; font-size:clamp(12px,2vw,17px); }
+  .toast { position:absolute; left:50%; top:52%; transform:translate(-50%,-50%); background:#15162bee; border:3px solid var(--yellow); padding:12px 16px; z-index:5; text-align:center; display:none; width:max-content; max-width:90%; box-shadow:5px 5px 0 #0007; }
+  .toast.show { display:block; }
+  .hidden { display:none!important; }
+
+  .shopWallet { display:flex; align-items:center; justify-content:space-between; gap:12px; background:#11142a; border:2px solid var(--yellow); padding:13px 16px; margin:16px 0; color:var(--cyan); font-weight:900; letter-spacing:1px; }
+  .shopWallet strong { font-size:clamp(23px,2.5vw,32px); color:var(--yellow); }
+  .shopGrid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:14px; margin:18px 0; }
+  .shopItem { display:flex; flex-direction:column; gap:10px; background:#171b38; border:2px solid #586198; padding:16px; min-width:0; }
+  .shopItem h3 { margin:0; font-size:clamp(16px,1.5vw,21px); color:var(--yellow); }
+  .shopItem p { margin:0; color:#d0d6f4; line-height:1.5; font-size:14px; flex:1; }
+  .shopItem .shopLevel { color:var(--cyan); font-size:12px; letter-spacing:1px; }
+  .shopItem button { width:100%; }
+  .shopNote { font-size:12px!important; color:var(--muted)!important; }
+  @media(max-width:600px){ .shopGrid{grid-template-columns:1fr;} }
+  @media(max-width:900px) { body{padding:9px;} .cabinet{padding:10px;border-width:3px;} .menuGrid{grid-template-columns:1fr;} .hero{min-height:235px;} .hero:after{bottom:10px;} .sidePanel{display:grid;grid-template-columns:1fr 1fr;} .panelLabel,.helpText{grid-column:1/-1;} .sidePanel button{font-size:clamp(14px,1.8vw,17px);padding:14px;} .highscore{display:none;} .controlsGrid{grid-template-columns:1fr;} header{gap:7px;} .logo{width:39px;height:39px;font-size:21px;} .subtitle{font-size:10px;} .touchControls{display:flex;} .gameTop{align-items:flex-start;} .gameBottom{font-size:11px;} .hudTeam{font-size:clamp(12px,1.65vw,15px);gap:6px;} .hudCenter{font-size:clamp(13px,1.7vw,16px);} }
+  @media(max-width:480px){ .sidePanel{grid-template-columns:1fr;} .difficultyGrid{grid-template-columns:1fr;} .hero{padding:12px;} .gameTitle{font-size:33px;} .lobbyActions{grid-template-columns:1fr;} .joinRow{flex-direction:column;} }
+</style>
+</head>
+<body>
+<div class="cabinet">
+  <header>
+    <div class="brand"><div class="logo">◉</div><div><h1>DODGEBALL DUEL</h1><div class="subtitle">RETRO PIXEL SPORTS • ARCADE EDITION</div></div></div>
+    <div class="highscore">COINS <span id="coinCount">100</span><br>HIGH SCORE <span id="highScore">00000</span><br>BEST TEAM: <span id="bestTeam">RED ROCKETS</span></div>
+  </header>
+
+  <section id="menuScreen" class="screen active">
+    <div class="menuGrid">
+      <div class="hero">
+        <div style="color:var(--cyan);font-size:11px;letter-spacing:3px">ARCADE SPORTS LEAGUE PRESENTS</div>
+        <div class="gameTitle">DODGE.<br>THROW.<br>DOMINATE.</div>
+        <div class="miniCourt"><div class="miniTeam">RED</div><div class="miniMid">VS</div><div class="miniTeam blue">BLUE</div></div>
+        <p>Grab the ball, line up your shot, and send your rival packing. Retro arcade action with ricochets, clutch catches, quick dodges, and bragging rights.</p>
+      </div>
+      <div class="sidePanel">
+        <div class="panelLabel">CHOOSE YOUR GAME</div>
+        <button id="fightCpu" class="pink">ARCADE MODE <small>ONE PLAYER VS CPU</small></button>
+        <button id="localMode" class="cyan">LOCAL VERSUS <small>2 PLAYERS • ONE DEVICE</small></button>
+        <button id="shopBtn" class="secondary">ARCADE SHOP <small>UPGRADES • SPEND YOUR COINS</small></button>
+        <button id="adminBtn" class="secondary">ADMIN PANEL <small>ENTER A CODE</small></button>
+        <button id="onlineMode" class="secondary">ONLINE DUEL <small>ROOM CODE • TWO DEVICES</small></button>
+        <button id="controlsBtn" class="secondary">HOW TO PLAY <small>CONTROLS & RULES</small></button>
+        <div class="helpText">BEST PLAYED WITH A KEYBOARD.<br>FIRST TO 3 ROUNDS WINS THE MATCH.</div>
+      </div>
+    </div>
+  </section>
+
+  <section id="difficultyScreen" class="screen">
+    <div class="lobby difficultyLobby">
+      <h2>CHOOSE YOUR CHALLENGE</h2>
+      <p>Pick the CPU difficulty. The opponent gets faster, smarter, and more accurate at higher levels.</p>
+      <div class="difficultyGrid">
+        <button class="difficultyCard easy" data-difficulty="easy">EASY<small>RELAXED RALLIES</small></button>
+        <button class="difficultyCard medium" data-difficulty="medium">MEDIUM<small>A FAIR FIGHT</small></button>
+        <button class="difficultyCard hard" data-difficulty="hard">HARD<small>QUICK REACTIONS</small></button>
+        <button class="difficultyCard impossible" data-difficulty="impossible">IMPOSSIBLE<small>THE CHALLENGER: JADEN</small></button>
+      </div>
+      <button id="difficultyBack" class="secondary">BACK TO MENU</button>
+    </div>
+  </section>
+
+  <section id="adminScreen" class="screen">
+    <div class="lobby adminLobby">
+      <h2>ADMIN PANEL</h2>
+      <p>Enter a code and press REDEEM. Codes apply to your player in Arcade mode.</p>
+      <div class="joinRow"><input id="adminCode" type="text" maxlength="24" placeholder="ENTER CODE" autocomplete="off" autocapitalize="off" spellcheck="false"><button id="adminRedeem" class="pink">REDEEM</button></div>
+      <p id="adminStatus" class="status"></p>
+      <div class="shopWallet"><span>YOUR COINS</span><strong id="adminCoins">0</strong></div>
+      <div class="shopWallet"><span>STARTING BALLS</span><strong id="adminBalls">10</strong></div>
+      <button id="adminBack" class="secondary">BACK TO MENU</button>
+    </div>
+  </section>
+
+  <section id="shopScreen" class="screen">
+    <div class="lobby shopLobby">
+      <h2>ARCADE SHOP</h2>
+      <p>Spend coins earned in Arcade matches on upgrades. Every purchase has a real gameplay effect. Upgrades apply to your player in Arcade mode only, so local and online duels stay fair.</p>
+      <div class="shopWallet"><span>YOUR COINS</span><strong id="shopCoins">100</strong></div>
+      <div id="shopItems" class="shopGrid"></div>
+      <button id="shopBack" class="secondary">BACK TO MENU</button>
+    </div>
+  </section>
+
+  <section id="onlineScreen" class="screen">
+    <div class="lobby">
+      <h2>ONLINE DUEL</h2>
+      <p>Host a private room and send the room code to a friend, or join their room. Both players need internet access. Peer-to-peer connection uses the PeerJS signaling service.</p>
+      <div class="lobbyActions"><button id="hostBtn" class="cyan">HOST A ROOM</button><button id="backOnlineBtn" class="secondary">BACK TO MENU</button></div>
+      <div id="hostRoomArea" class="hidden">
+        <div class="panelLabel">YOUR ROOM CODE — SHARE THIS</div><div id="roomCodeDisplay" class="roomCode">CONNECTING…</div>
+        <button id="copyCodeBtn" class="secondary">COPY ROOM CODE</button>
+      </div>
+      <div style="border-top:1px dashed #555d8f;margin-top:16px;padding-top:15px">
+        <div class="panelLabel">JOIN A FRIEND</div>
+        <div class="joinRow"><input id="joinCode" placeholder="ENTER ROOM CODE" maxlength="40" autocomplete="off"><button id="joinBtn">JOIN ROOM</button></div>
+      </div>
+      <p id="onlineStatus" class="status">Choose host or enter a room code.</p>
+      <p style="font-size:10px;color:#aeb4d4">If the signaling service is unavailable on your network, online play may fail. Local and CPU modes work without networking.</p>
+    </div>
+  </section>
+
+  <section id="controlsScreen" class="screen">
+    <div class="lobby">
+      <h2>HOW TO PLAY</h2><p>Two sides, two balls, three lives. Grab a ball, face your rival, and throw! Land three hits to win the round. First to three rounds wins the match.</p>
+      <div class="controlsGrid">
+        <div class="controlCard"><h3>ARCADE / ONLINE PLAYER</h3>
+          <div class="keyRow"><span>Move / face</span><kbd>W A S D</kbd></div>
+          <div class="keyRow"><span>Pick up / throw</span><kbd>E / CLICK</kbd></div>
+          <div class="keyRow"><span>Quick dodge</span><kbd>SPACE</kbd></div>
+          <div class="keyRow"><span>Catch attempt</span><kbd>Q</kbd></div>
+        </div>
+        <div class="controlCard"><h3>LOCAL PLAYER 2</h3>
+          <div class="keyRow"><span>Move / face</span><kbd>ARROWS</kbd></div>
+          <div class="keyRow"><span>Pick up / throw</span><kbd>ENTER</kbd></div>
+          <div class="keyRow"><span>Quick dodge</span><kbd>RIGHT SHIFT</kbd></div>
+          <div class="keyRow"><span>Catch attempt</span><kbd>RIGHT CTRL</kbd></div>
+        </div>
+      </div>
+      <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:16px"><button id="controlsBack" class="secondary">BACK</button><button id="startFromControls">LET'S PLAY</button></div>
+    </div>
+  </section>
+
+  <section id="gameScreen" class="screen">
+    <div class="gameShell">
+      <div class="gameTop">
+        <div class="hudTeam"><span class="swatch" style="background:var(--pink)"></span><span id="leftLabel">RED ROCKETS</span><span id="leftLives">♥ ♥ ♥</span></div>
+        <div class="hudCenter"><span id="roundLabel">ROUND 1</span> <span id="timerLabel">00:45</span></div>
+        <div class="hudTeam" style="justify-content:flex-end"><span id="rightLives">♥ ♥ ♥</span><span id="rightLabel">BLUE BOLTS</span><span class="swatch" style="background:var(--blue)"></span></div>
+      </div>
+      <div class="canvasWrap"><canvas id="gameCanvas" width="480" height="270" aria-label="Dodgeball playing field"></canvas><div id="toast" class="toast"></div></div>
+      <div class="gameBottom"><span id="modeTag" class="modeTag">ARCADE MODE</span><span>THROW: E / CLICK / ENTER &nbsp; • &nbsp; DODGE: SPACE / SHIFT &nbsp; • &nbsp; PAUSE: ESC</span><button id="pauseBtn" class="smallButton secondary">PAUSE</button><button id="restartBtn" class="smallButton">RESTART</button><button id="menuBtn" class="smallButton secondary">MENU</button></div>
+      <div class="touchControls" id="touchControls"><button id="touchUp" class="secondary">▲</button><button id="touchLeft" class="secondary">◀</button><button id="touchAction">PICK UP / THROW</button><button id="touchRight" class="secondary">▶</button><button id="touchDown" class="secondary">▼</button><button id="touchDodge" class="pink">DODGE</button></div>
+    </div>
+  </section>
+  <footer>DODGEBALL DUEL • RUN IT BACK!</footer>
+</div>
+<script>
+(() => {
+'use strict';
+const $ = id => document.getElementById(id);
+const canvas = $('gameCanvas');
+const ctx = canvas.getContext('2d');
+ctx.imageSmoothingEnabled = false;
+const W = canvas.width, H = canvas.height;
+const COLORS = {ink:'#15162b', navy:'#202648', cream:'#fff1b8', yellow:'#ffd84e', pink:'#ff5678', cyan:'#56e6d0', blue:'#57a8ff', court:'#267d70', court2:'#227368', line:'#f8e7a2', dark:'#101328', skin:'#ffc18b', skin2:'#b96d51', hair:'#382844'};
+const screens = ['menuScreen','difficultyScreen','shopScreen','adminScreen','onlineScreen','controlsScreen','gameScreen'];
+let mode = 'cpu', state = 'menu', paused = false, gameOver = false, roundOver = false, roundEndTimer = 0;
+let cpuDifficulty = 'medium';
+let players = [], balls = [], round = 1, clock = 45, roundTimer = 0, roundScores = [0,0], lastTime = 0, accumulator = 0;
+let keys = new Set(), pressed = new Set(), pointer = {x:240,y:135,inside:false};
+let particles = [], floatingTexts = [], remoteInput = emptyInput(), peer = null, conn = null, netRole = '', netConnected = false, netPeerId = '', remoteSnapshot = null, lastSend = 0, lastInputSend = 0, netError = '';
+let toastTimer = 0, highScore = Number(localStorage.getItem('dodgeballduel-highscore') || 0);
+const SHOP_ITEMS = [
+  {id:'powerThrow',name:'CANNON ARM',icon:'➤',description:'Throw balls 14% faster per level in Arcade mode.',costs:[150,225,325]},
+  {id:'turboSneakers',name:'TURBO SNEAKERS',icon:'»',description:'Move 8% faster per level in Arcade mode.',costs:[140,210,300]},
+  {id:'quickDodge',name:'QUICK REFLEXES',icon:'⚡',description:'Reduce dodge cooldown by 12% per level in Arcade mode.',costs:[160,240,350]},
+  {id:'catchGloves',name:'STICKY GLOVES',icon:'✦',description:'Catch timing lasts 0.06 seconds longer per level in Arcade mode.',costs:[125,190,275]}
+];
+function readStoredNumber(key,fallback){try{const v=localStorage.getItem(key);return v===null?fallback:Number(v)||0;}catch{return fallback;}}
+function readStoredLevels(){try{const v=JSON.parse(localStorage.getItem('dodgeballduel-upgrades')||'{}');return {powerThrow:Math.min(3,Math.max(0,Number(v.powerThrow)||0)),turboSneakers:Math.min(3,Math.max(0,Number(v.turboSneakers)||0)),quickDodge:Math.min(3,Math.max(0,Number(v.quickDodge)||0)),catchGloves:Math.min(3,Math.max(0,Number(v.catchGloves)||0))};}catch{return {powerThrow:0,turboSneakers:0,quickDodge:0,catchGloves:0};}}
+let coins=readStoredNumber('dodgeballduel-coins',100), shopLevels=readStoredLevels();
+try{if(localStorage.getItem('dodgeballduel-coins')===null)localStorage.setItem('dodgeballduel-coins','100');}catch{}
+$('highScore').textContent = String(highScore).padStart(5,'0');
+function saveProgress(){try{localStorage.setItem('dodgeballduel-coins',String(coins));localStorage.setItem('dodgeballduel-upgrades',JSON.stringify(shopLevels));}catch{}}
+function updateCoinLabels(){const a=$('coinCount');if(a)a.textContent=String(coins);const b=$('shopCoins');if(b)b.textContent=String(coins);}
+function renderShop(){updateCoinLabels();$('shopItems').innerHTML=SHOP_ITEMS.map(item=>{const level=shopLevels[item.id]||0,done=level>=3,cost=item.costs[level]||0;return `<article class="shopItem"><h3>${item.icon} ${item.name}</h3><p>${item.description}</p><div class="shopLevel">LEVEL ${level}/3 ${done?'• MAXED':''}</div><button data-buy="${item.id}" ${done||coins<cost?'disabled':''}>${done?'MAX LEVEL':`BUY • ${cost} COINS`}</button></article>`;}).join('');}
+function awardCoins(amount,reason='BONUS'){if(amount<=0)return;coins+=amount;saveProgress();updateCoinLabels();floatText(240,66,'+'+amount+' COINS',COLORS.yellow);setToast('+'+amount+' COINS • '+reason,1.25);}
+
+function emptyInput(){ return {x:0,y:0,action:false,dodge:false,catch:false,aimX:0,aimY:0,aimValid:false}; }
+function showScreen(id){ screens.forEach(s => $(s).classList.toggle('active',s===id)); }
+function setToast(text, duration=1.2){ $('toast').textContent=text; $('toast').classList.add('show'); toastTimer=duration; }
+function setOnlineStatus(text){ $('onlineStatus').textContent=text; }
+function keyName(e){ return e.code==='Space'?'space':e.key.toLowerCase(); }
+const preventKeys = new Set(['space','arrowup','arrowdown','arrowleft','arrowright','enter','shift','control']);
+window.addEventListener('keydown', e => { const k=keyName(e); if(preventKeys.has(k)) e.preventDefault(); if(!keys.has(k)) pressed.add(k); keys.add(k); if(k==='escape' && state==='game') { paused=!paused; $('pauseBtn').textContent=paused?'RESUME':'PAUSE'; } });
+window.addEventListener('keyup', e => keys.delete(keyName(e)));
+window.addEventListener('blur',()=>{ keys.clear(); pressed.clear(); });
+canvas.addEventListener('pointermove',e=>{const r=canvas.getBoundingClientRect(); pointer.x=(e.clientX-r.left)/r.width*W; pointer.y=(e.clientY-r.top)/r.height*H; pointer.inside=true;});
+canvas.addEventListener('pointerleave',()=>pointer.inside=false);
+canvas.addEventListener('pointerdown',e=>{ if(e.button===0 && state==='game' && mode!=='local' && players[0]) { e.preventDefault(); pressed.add('e'); } });
+function hitButton(id,fn){ $(id).addEventListener('click',fn); }
+hitButton('fightCpu',()=>{showScreen('difficultyScreen');state='difficultyMenu';});
+hitButton('difficultyBack',()=>{showScreen('menuScreen');state='menu';});
+document.querySelectorAll('[data-difficulty]').forEach(btn=>btn.addEventListener('click',()=>startGame('cpu',btn.dataset.difficulty)));
+hitButton('localMode',()=>startGame('local'));
+function updateAdminLabels(){const c=$('adminCoins');if(c)c.textContent=String(coins);const b=$('adminBalls');if(b)b.textContent=String(bonusBalls?BONUS_BALLS:START_BALLS);}
+function redeemCode(){const input=$('adminCode'),code=input.value.trim().toLowerCase(),out=$('adminStatus');input.value='';
+  if(code==='ty4playing'){coins+=500;saveProgress();updateCoinLabels();out.textContent='CODE ACCEPTED: +500 COINS!';}
+  else if(code==='nahidwin'){bonusBalls=!bonusBalls;try{localStorage.setItem('dodgeballduel-bonusballs',bonusBalls?'1':'0');}catch{}out.textContent=bonusBalls?'CODE ACCEPTED: YOU NOW START WITH 20 BALLS!':'CODE TOGGLED OFF: BACK TO 10 STARTING BALLS.';}
+  else out.textContent=code?'INVALID CODE.':'ENTER A CODE FIRST.';
+  updateAdminLabels();}
+hitButton('adminBtn',()=>{$('adminStatus').textContent='';updateAdminLabels();state='admin';showScreen('adminScreen');});
+hitButton('adminBack',()=>{state='menu';showScreen('menuScreen');});
+hitButton('adminRedeem',redeemCode);
+$('adminCode').addEventListener('keydown',e=>{e.stopPropagation();if(e.key==='Enter')redeemCode();});
+$('adminCode').addEventListener('keyup',e=>e.stopPropagation());
+hitButton('shopBtn',()=>{renderShop();state='shop';showScreen('shopScreen');});
+hitButton('shopBack',()=>{state='menu';showScreen('menuScreen');});
+$('shopItems').addEventListener('click',e=>{const btn=e.target.closest('[data-buy]');if(!btn)return;const item=SHOP_ITEMS.find(x=>x.id===btn.dataset.buy);if(!item)return;const level=shopLevels[item.id]||0;if(level>=3)return;const cost=item.costs[level];if(coins<cost){setToast('NOT ENOUGH COINS!',1);return;}coins-=cost;shopLevels[item.id]=level+1;saveProgress();renderShop();setToast(item.name+' UPGRADED!',1.2);});
+hitButton('onlineMode',()=>{closeNet();showScreen('onlineScreen');state='onlineMenu';setOnlineStatus('Choose host or enter a room code.');$('hostRoomArea').classList.add('hidden');});
+hitButton('controlsBtn',()=>showScreen('controlsScreen'));
+hitButton('controlsBack',()=>showScreen('menuScreen'));
+hitButton('startFromControls',()=>startGame('cpu','medium'));
+hitButton('backOnlineBtn',()=>{closeNet();state='menu';showScreen('menuScreen');});
+hitButton('restartBtn',()=>{ if(mode==='online'){ if(netRole==='host'){startMatch();syncSnapshot(true);} else if(conn&&conn.open) conn.send({type:'restart'}); } else startMatch(); });
+hitButton('menuBtn',()=>{closeNet();state='menu';paused=false;showScreen('menuScreen');});
+hitButton('pauseBtn',()=>{paused=!paused;$('pauseBtn').textContent=paused?'RESUME':'PAUSE';});
+hitButton('hostBtn',hostOnline);
+hitButton('joinBtn',joinOnline);
+hitButton('copyCodeBtn',async()=>{try{await navigator.clipboard.writeText($('roomCodeDisplay').textContent);setOnlineStatus('Room code copied. Send it to your friend.');}catch{setOnlineStatus('Select and copy the room code manually.');}});
+
+function createPlayer(id){ return {id,x:id===0?85:395,y:135,vx:0,vy:0,r:7,faceX:id===0?1:-1,faceY:0,lives:3,roundScore:0,heldBall:null,stock:0,dash:0,dashCooldown:0,invuln:0,catchWindow:0,throwCooldown:0,throwWindup:0,throwAnim:0,throwDX:id===0?1:-1,throwDY:0,hitFlash:0,stun:0,anim:0,prevX:0,prevY:0,aiThink:0,aiAction:emptyInput(),score:0,aiMoveX:0,aiMoveY:0}; }
+let nextBallId=0;
+function newBall(x,y){return {id:nextBallId++,x,y,vx:0,vy:0,heldBy:-1,flying:false,age:0,bounces:0,trail:[],spin:0,lastOwner:-1};}
+const START_BALLS=10, BONUS_BALLS=20;
+let bonusBalls=false;try{bonusBalls=localStorage.getItem('dodgeballduel-bonusballs')==='1';}catch{}
+function startBallsFor(p){return(mode==='cpu'&&p.id===0&&bonusBalls)?BONUS_BALLS:START_BALLS;}
+function spawnBalls(){ balls=[]; [{x:225,y:112},{x:255,y:158}].forEach(p=>balls.push(newBall(p.x,p.y)));
+  // Every player starts the round carrying 10 balls: one in hand, the rest in reserve (auto-reload after each throw).
+  players.forEach(p=>{const b=newBall(p.x,p.y);b.heldBy=p.id;p.heldBall=b;p.stock=startBallsFor(p)-1;balls.push(b);}); }
+function startGame(nextMode,difficulty=cpuDifficulty){ if(nextMode!=='online') closeNet(); mode=nextMode; if(mode==='cpu')cpuDifficulty=['easy','medium','hard','impossible'].includes(difficulty)?difficulty:'medium'; state='game'; paused=false; gameOver=false; roundOver=false; roundScores=[0,0]; round=1; initMatch(); showScreen('gameScreen'); $('pauseBtn').textContent='PAUSE'; $('modeTag').textContent=mode==='cpu'?'ARCADE • '+cpuDifficulty.toUpperCase():mode==='local'?'LOCAL 1V1':'ONLINE 1V1'; $('leftLabel').textContent=mode==='cpu'?'YOU':'RED ROCKETS'; $('rightLabel').textContent=mode==='cpu'?(cpuDifficulty==='impossible'?'JADEN':'CPU RIVAL'):'BLUE BOLTS'; }
+function initMatch(){ players=[createPlayer(0),createPlayer(1)]; clock=45; roundTimer=0; roundOver=false; gameOver=false; roundEndTimer=0; paused=false; particles=[]; floatingTexts=[]; spawnBalls(); updateHud(); setToast('GET READY!',1); if(mode==='online'&&netRole==='host')syncSnapshot(true); }
+function startMatch(){ initMatch(); }
+function startRound(){ round++; players.forEach(p=>{p.lives=3;p.x=p.id===0?85:395;p.y=135;p.vx=p.vy=0;p.dash=p.dashCooldown=p.invuln=p.catchWindow=p.throwCooldown=p.throwWindup=p.throwAnim=p.hitFlash=p.stun=0;p.faceX=p.id===0?1:-1;p.faceY=0;p.heldBall=null;}); spawnBalls(); clock=45;roundTimer=0;roundOver=false;roundEndTimer=0;gameOver=false;setToast('ROUND '+round+'!',1);updateHud();if(mode==='online'&&netRole==='host')syncSnapshot(true); }
+function closeNet(){ clearTimeout(window.hostTimer);clearTimeout(window.joinOpenTimer);clearTimeout(joinTimer);{const h=$('hostBtn'),j=$('joinBtn');if(h)h.disabled=false;if(j)j.disabled=false;} try{if(conn){conn.close();}}catch{} try{if(peer){peer.destroy();}}catch{} peer=null;conn=null;netRole='';netConnected=false;netPeerId='';remoteSnapshot=null;remoteInput=emptyInput(); }
+const PEER_URLS=['https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js','https://cdn.jsdelivr.net/npm/peerjs@1.5.4/dist/peerjs.min.js','https://cdnjs.cloudflare.com/ajax/libs/peerjs/1.5.4/peerjs.min.js'];
+const PEER_OPTS={debug:0,config:{iceServers:[{urls:'stun:stun.l.google.com:19302'},{urls:'stun:stun1.l.google.com:19302'},{urls:'stun:global.stun.twilio.com:3478'},{urls:['turn:openrelay.metered.ca:80','turn:openrelay.metered.ca:443','turn:openrelay.metered.ca:443?transport=tcp'],username:'openrelayproject',credential:'openrelayproject'}]}};
+function loadScript(url){return new Promise((res,rej)=>{const t=document.createElement('script');t.src=url;const to=setTimeout(()=>{t.remove();rej(new Error('timeout'));},8000);t.onload=()=>{clearTimeout(to);window.Peer?res():rej(new Error('bad'));};t.onerror=()=>{clearTimeout(to);t.remove();rej(new Error('blocked'));};document.head.appendChild(t);});}
+async function loadPeerJS(){if(window.Peer)return;for(const u of PEER_URLS){try{await loadScript(u);return;}catch{}}throw new Error('Could not load the online networking library. Check your internet connection, or turn off any ad/content blocker and try again.');}
+function peerErrorText(e){const t=e&&e.type;const m={'peer-unavailable':'Room not found. Double-check the code, and make sure your friend is still on the Online screen with their room open.','network':'Cannot reach the matchmaking server. Check your internet connection and try again.','server-error':'The matchmaking server is not responding. Try again in a moment.','socket-error':'The matchmaking connection failed. Try again in a moment.','socket-closed':'The matchmaking connection was closed. Try again.','webrtc':'Could not link the two devices. Try a different network (or turn off VPN) and try again.','unavailable-id':'That room code is already taken. Try again.','browser-incompatible':'This browser does not support online play. Try Chrome, Edge, Safari or Firefox.'};return (m[t]||('Connection error ('+(t||(e&&e.message)||'unknown')+'). Try again.'));}
+let joinTimer=null;
+async function hostOnline(){ closeNet(); $('hostRoomArea').classList.remove('hidden');$('roomCodeDisplay').textContent='CONNECTING…'; setOnlineStatus('Starting a peer-to-peer room…'); $('hostBtn').disabled=true;try{await loadPeerJS();const code='DD-'+Math.random().toString(36).slice(2,8).toUpperCase();peer=new Peer(code,PEER_OPTS);netRole='host';netPeerId=code;clearTimeout(window.hostTimer);window.hostTimer=setTimeout(()=>{if(!netPeerId||$('roomCodeDisplay').textContent==='CONNECTING…'){const p=peer;peer=null;try{p&&p.destroy();}catch{}$('roomCodeDisplay').textContent='NO CODE YET';setOnlineStatus('Could not reach the matchmaking server in time. Check your internet connection (or turn off VPN / ad blockers) and press HOST ROOM to try again.');$('hostBtn').disabled=false;}},12000);peer.on('open',id=>{clearTimeout(window.hostTimer);$('roomCodeDisplay').textContent=id;setOnlineStatus('Waiting for another player… Keep this window open.');});peer.on('connection',c=>{if(conn){c.close();return;}conn=c;wireConnection(c);});peer.on('error',e=>{clearTimeout(window.hostTimer);if($('roomCodeDisplay').textContent==='CONNECTING…')$('roomCodeDisplay').textContent='NO CODE YET';setOnlineStatus('Room error: '+peerErrorText(e));$('hostBtn').disabled=false;});peer.on('disconnected',()=>{setOnlineStatus('Lost connection to the matchmaking server. Reconnecting…');try{peer.reconnect();}catch{}});}catch(e){$('roomCodeDisplay').textContent='NO CODE YET';setOnlineStatus(e.message||'Could not start room.');$('hostBtn').disabled=false;} }
+async function joinOnline(){const code=$('joinCode').value.trim().toUpperCase();if(!code){setOnlineStatus('Enter your friend’s room code first.');return;}closeNet();$('joinBtn').disabled=true;setOnlineStatus('Connecting to room '+code+'…');try{await loadPeerJS();peer=new Peer(PEER_OPTS);netRole='guest';clearTimeout(window.joinOpenTimer);window.joinOpenTimer=setTimeout(()=>{if(!conn){setOnlineStatus('Could not reach the matchmaking server in time. Check your internet connection (or turn off VPN / ad blockers) and try again.');$('joinBtn').disabled=false;}},12000);peer.on('open',()=>{clearTimeout(window.joinOpenTimer);conn=peer.connect(code,{reliable:true});wireConnection(conn);clearTimeout(joinTimer);joinTimer=setTimeout(()=>{if(!netConnected){setOnlineStatus('Still cannot reach that room. Check the code, make sure the host is waiting, and try again (a different network may help).');$('joinBtn').disabled=false;}},20000);});peer.on('error',e=>{clearTimeout(joinTimer);setOnlineStatus(peerErrorText(e));$('joinBtn').disabled=false;});}catch(e){setOnlineStatus(e.message||'Could not load online networking.');$('joinBtn').disabled=false;} }
+function wireConnection(c){ c.on('open',()=>{netConnected=true;clearTimeout(joinTimer);if(netRole==='host'){setOnlineStatus('Opponent connected! Match starting…');c.send({type:'hello',role:'guest'});startGame('online');}else{setOnlineStatus('Connected! Waiting for host to start the match…');c.send({type:'hello',role:'host'});} });c.on('data',msg=>{if(!msg||typeof msg!=='object')return;if(msg.type==='hello'&&netRole==='host'&&state!=='game'){startGame('online');}else if(msg.type==='input'&&netRole==='host'){remoteInput=sanitizeInput(msg.input);}else if(msg.type==='state'&&netRole==='guest'){remoteSnapshot=msg.state;if(state!=='game'){mode='online';state='game';showScreen('gameScreen');$('modeTag').textContent='ONLINE 1V1';$('leftLabel').textContent='RED ROCKETS';$('rightLabel').textContent='BLUE BOLTS';}if(msg.state.notice)setToast(msg.state.notice,.8);}else if(msg.type==='restart'&&netRole==='host'){startMatch();}else if(msg.type==='leave'){setOnlineStatus('Your opponent left the match.');}});c.on('close',()=>{netConnected=false;if(state==='game'){paused=true;setToast('OPPONENT DISCONNECTED',3);}setOnlineStatus('Opponent disconnected. You can return to the menu or reconnect.');$('hostBtn').disabled=false;$('joinBtn').disabled=false;});c.on('error',e=>{setOnlineStatus('Connection issue: '+(e.message||'please try again'));}); }
+function sanitizeInput(o){if(!o||typeof o!=='object')return emptyInput();return{x:Math.max(-1,Math.min(1,Number(o.x)||0)),y:Math.max(-1,Math.min(1,Number(o.y)||0)),action:!!o.action,dodge:!!o.dodge,catch:!!o.catch,aimX:Number(o.aimX)||0,aimY:Number(o.aimY)||0,aimValid:!!o.aimValid};}
+function inputForHuman(id){const i=emptyInput();if(mode==='local'&&id===1){i.x=(keys.has('arrowright')?1:0)-(keys.has('arrowleft')?1:0);i.y=(keys.has('arrowdown')?1:0)-(keys.has('arrowup')?1:0);i.action=pressed.has('enter');i.dodge=pressed.has('shiftright')||pressed.has('shift');i.catch=pressed.has('controlright')||pressed.has('control');}else{i.x=(keys.has('d')?1:0)-(keys.has('a')?1:0);i.y=(keys.has('s')?1:0)-(keys.has('w')?1:0);i.action=pressed.has('e');i.dodge=pressed.has('space');i.catch=pressed.has('q');if((mode==='cpu'||mode==='online')&&pointer.inside){i.aimX=pointer.x;i.aimY=pointer.y;i.aimValid=true;}}return i;}
+const CPU_SKILL = {
+  easy:       {think:.72, jitter:.28, preferred:118, approach:.30, retreat:.55, throwRange:105, throwChance:.42, dodge:.05, catch:.02, lead:0, error:23, speed:.78},
+  medium:     {think:.24, jitter:.20, preferred:132, approach:.24, retreat:.70, throwRange:132, throwChance:.72, dodge:.20, catch:.12, lead:5, error:9, speed:.92},
+  hard:       {think:.14, jitter:.10, preferred:148, approach:.25, retreat:.85, throwRange:154, throwChance:.88, dodge:.32, catch:.18, lead:8, error:4, speed:.98},
+  impossible: {think:.11, jitter:.07, preferred:156, approach:.27, retreat:.90, throwRange:165, throwChance:.94, dodge:.40, catch:.22, lead:9, error:3, speed:1.00}
+};
+function getAIInput(p,dt){
+  const enemy=players[0], skill=CPU_SKILL[cpuDifficulty]||CPU_SKILL.medium;
+  p.aiThink-=dt;
+  const out=emptyInput();
+  if(p.aiThink<=0){
+    p.aiThink=skill.think+Math.random()*skill.jitter;
+    const dx=enemy.x-p.x,dy=enemy.y-p.y,d=Math.hypot(dx,dy)||1;
+    const side=p.aiSide|| (Math.random()<.5?-1:1);
+    if(Math.random()<.12)p.aiSide=-side;else p.aiSide=side;
+    let mx=0,my=0;
+    if(p.heldBall){
+      // Approach only until reaching the preferred range, then circle. Back away when crowded.
+      let radial=d>skill.preferred+18?skill.approach:d<skill.preferred-24?-skill.retreat:0;
+      if(p.x<=258&&dx<0)radial=Math.min(radial,-.45); // explicit escape vector away from the center line
+      mx=(dx/d)*radial+(-dy/d)*side*.62;
+      my=(dy/d)*radial+(dx/d)*side*.62;
+      if(d<skill.throwRange&&Math.random()<skill.throwChance)out.action=true;
+    }else{
+      // Never chase a ball that is trapped on the other player's half; that caused center-line lockups.
+      const reachable=balls.filter(b=>b.heldBy===-1&&!b.flying&&(b.x>=238));
+      const loose=reachable.sort((a,b)=>Math.hypot(a.x-p.x,a.y-p.y)-Math.hypot(b.x-p.x,b.y-p.y))[0];
+      if(loose){
+        const bx=loose.x-p.x,by=loose.y-p.y,bd=Math.hypot(bx,by)||1;
+        mx=bx/bd;my=by/bd;
+        // If the target is left of the legal player area, stop steering into the wall and peel away.
+        if(p.x<=250&&mx<0){mx=.58;my+=(Math.random()<.5?-.4:.4);}
+        if(bd<27)out.action=true;
+      }else{
+        let radial=d>skill.preferred+18?skill.approach:d<skill.preferred-24?-skill.retreat:.02;
+        if(p.x<=258&&dx<0)radial=Math.min(radial,-.55);
+        mx=(dx/d)*radial+(-dy/d)*side*.76;
+        my=(dy/d)*radial+(dx/d)*side*.76;
+      }
+    }
+    const m=Math.hypot(mx,my)||1;
+    p.aiMoveX=Math.max(-1,Math.min(1,mx/m));p.aiMoveY=Math.max(-1,Math.min(1,my/m));
+    if(d<115&&Math.random()<skill.dodge)out.dodge=true;
+  }
+  out.x=p.aiMoveX||0;out.y=p.aiMoveY||0;
+  // Hard guard against a stale desired vector that presses into the AI's left-side boundary.
+  if(p.x<=246.5&&out.x<0){out.x=.72;out.y=out.y*.7; p.aiMoveX=out.x;p.aiMoveY=out.y;}
+  if(p.y<=58&&out.y<0){out.y=.72;p.aiMoveY=out.y;}
+  if(p.y>=218&&out.y>0){out.y=-.72;p.aiMoveY=out.y;}
+  const incoming=balls.find(b=>b.flying&&b.heldBy===-1&&b.lastOwner===0&&Math.hypot(b.x-p.x,b.y-p.y)<54);
+  if(incoming){
+    const approaching=(incoming.vx*(p.x-incoming.x)+incoming.vy*(p.y-incoming.y));
+    if(approaching>0){
+      if(p.catchWindow<=0&&Math.random()<skill.catch)out.catch=true;else out.dodge=true;
+      const sign=p.aiSide||1, speed=Math.max(1,Math.hypot(incoming.vx,incoming.vy));
+      out.x=Math.max(-1,Math.min(1,out.x+(-incoming.vy/speed)*sign));
+      out.y=Math.max(-1,Math.min(1,out.y+(incoming.vx/speed)*sign));
+      if(p.x<=246.5&&out.x<0)out.x=.72;
+      if(p.y<=58&&out.y<0)out.y=.72;
+      if(p.y>=218&&out.y>0)out.y=-.72;
+    }
+  }
+  return out;
+}
+function actForPlayer(p,inp,dt){
+  if(p.throwWindup>0){
+    // Keep the committed aim during the wind-up; do not flick the glove around with movement input.
+    p.throwWindup=Math.max(0,p.throwWindup-dt);
+    if(p.throwWindup===0)releaseThrow(p);
+  }
+  p.throwAnim=Math.max(0,p.throwAnim-dt);
+  if(p.throwWindup<=0){
+    if(inp.aimValid&&p.id===0&&(mode==='cpu'||mode==='online')&&(p.heldBall||!inp.x&&!inp.y)){
+      const dx=inp.aimX-p.x,dy=inp.aimY-p.y,d=Math.hypot(dx,dy)||1;p.faceX=dx/d;p.faceY=dy/d;
+    }else if(inp.x||inp.y){const m=Math.hypot(inp.x,inp.y)||1;p.faceX=inp.x/m;p.faceY=inp.y/m;}
+    else if(!p.faceX&&!p.faceY)p.faceX=p.id===0?1:-1;
+  }
+  if(inp.dodge&&p.dashCooldown<=0&&p.stun<=0){let dx=inp.x,dy=inp.y;if(!dx&&!dy){dx=-p.faceY;dy=p.faceX;}const d=Math.hypot(dx,dy)||1;p.vx+=(dx/d)*3.5;p.vy+=(dy/d)*3.5;p.dash=.18;const dodgeLevel=(mode==='cpu'&&p.id===0)?shopLevels.quickDodge:0;p.dashCooldown=.75*(1-.12*dodgeLevel);p.invuln=.18;for(let i=0;i<5;i++)particles.push({x:p.x,y:p.y,vx:-dx/d*Math.random()*1.8,vy:-dy/d*Math.random()*1.8,life:.25,color:p.id===0?COLORS.pink:COLORS.blue,size:2});}
+  if(inp.catch)p.catchWindow=.22+((mode==='cpu'&&p.id===0)?shopLevels.catchGloves*.06:0);
+  if(inp.action&&p.throwCooldown<=0&&p.throwWindup<=0){
+    if(p.heldBall){beginThrow(p,inp);}
+    else {const radius=30+((mode==='cpu'&&p.id===0)?shopLevels.catchGloves*2:0);const ball=balls.filter(b=>b.heldBy===-1&&!b.flying).sort((a,b)=>Math.hypot(a.x-p.x,a.y-p.y)-Math.hypot(b.x-p.x,b.y-p.y))[0];if(ball&&Math.hypot(ball.x-p.x,ball.y-p.y)<radius){p.heldBall=ball;ball.heldBy=p.id;ball.x=p.x+p.faceX*9;ball.y=p.y+p.faceY*9;ball.vx=ball.vy=0;floatText(p.x,p.y-14,'GOT IT!',COLORS.yellow);}}
+  }
+}
+function beginThrow(p,inp){
+  if(!p.heldBall)return;
+  let dx=p.faceX,dy=p.faceY;
+  if((mode==='cpu'||mode==='online')&&p.id===0&&inp.aimValid){dx=inp.aimX-p.x;dy=inp.aimY-p.y;}
+  if(mode==='cpu'&&p.id===1){const target=players[0],skill=CPU_SKILL[cpuDifficulty]||CPU_SKILL.medium;dx=(target.x+target.vx*skill.lead)-p.x+(Math.random()-.5)*skill.error;dy=(target.y+target.vy*skill.lead)-p.y+(Math.random()-.5)*skill.error;}
+  const d=Math.hypot(dx,dy)||1;p.throwDX=dx/d;p.throwDY=dy/d;p.faceX=p.throwDX;p.faceY=p.throwDY;
+  p.throwWindup=.14;p.throwAnim=.38;p.throwCooldown=.42;
+  // A small anticipatory step makes the throw readable even at low resolution.
+  p.vx-=p.throwDX*.30;p.vy-=p.throwDY*.30;
+}
+function releaseThrow(p){
+  const b=p.heldBall;if(!b)return;p.heldBall=null;b.heldBy=-1;b.flying=true;b.age=0;b.bounces=0;b.lastOwner=p.id;
+  const dx=p.throwDX||p.faceX||1,dy=p.throwDY||p.faceY||0;
+  const powerLevel=(mode==='cpu'&&p.id===0)?shopLevels.powerThrow:0;
+  const speed=3.65*(1+.14*powerLevel);
+  b.x=p.x+dx*20;b.y=p.y+dy*12-3;b.vx=dx*speed;b.vy=dy*speed;b.age=0;b.trail=[];p.throwAnim=.24;
+  if(p.stock>0){const nb=newBall(p.x,p.y);nb.heldBy=p.id;p.heldBall=nb;p.stock--;balls.push(nb);}
+  for(let i=0;i<8;i++)particles.push({x:b.x,y:b.y,vx:-dx*(.3+Math.random()*1.6),vy:-dy*(.3+Math.random()*1.6)+(Math.random()-.5),life:.22,color:i%2?COLORS.yellow:COLORS.cream,size:2});
+}
+function updatePlayer(p,inp,dt){p.prevX=p.x;p.prevY=p.y;p.anim+=dt*9;p.dash=Math.max(0,p.dash-dt);p.dashCooldown=Math.max(0,p.dashCooldown-dt);p.invuln=Math.max(0,p.invuln-dt);p.catchWindow=Math.max(0,p.catchWindow-dt);p.throwCooldown=Math.max(0,p.throwCooldown-dt);p.hitFlash=Math.max(0,p.hitFlash-dt);p.stun=Math.max(0,p.stun-dt);
+  if(p.stun>0){p.vx*=.88;p.vy*=.88;}else{actForPlayer(p,inp,dt);let speed=p.dash>0?1.18:1.45;if(mode==='cpu'&&p.id===1)speed*=((CPU_SKILL[cpuDifficulty]||CPU_SKILL.medium).speed);if(mode==='cpu'&&p.id===0)speed*=1+.08*shopLevels.turboSneakers;const mx=inp.x,my=inp.y,mag=Math.hypot(mx,my)||1;p.vx+=(mx/mag)*speed*(Math.abs(mx)+Math.abs(my)>0?1:0);p.vy+=(my/mag)*speed*(Math.abs(mx)+Math.abs(my)>0?1:0);p.vx*=.78;p.vy*=.78;}
+  p.x+=p.vx;p.y+=p.vy;
+  // Keep legal half-court bounds but remove residual inward velocity at the wall to prevent an AI from appearing frozen.
+  const minX=p.id===0?34:246,maxX=p.id===0?234:446;
+  if(p.x<minX){p.x=minX;if(p.vx<0)p.vx=0;}if(p.x>maxX){p.x=maxX;if(p.vx>0)p.vx=0;}if(p.y<54){p.y=54;if(p.vy<0)p.vy=0;}if(p.y>222){p.y=222;if(p.vy>0)p.vy=0;}
+  if(p.heldBall){const wind=p.throwWindup>0;const back=wind?-4:0;p.heldBall.x=p.x+p.faceX*(9+back);p.heldBall.y=p.y+p.faceY*7+(wind?-7:2);p.heldBall.vx=p.heldBall.vy=0;}
+}
+function updateBall(b,dt){if(b.heldBy!==-1){const holder=players[b.heldBy];if(holder&&holder.heldBall===b)return;b.heldBy=-1;}if(!b.flying)return;b.age+=dt;b.trail.push({x:b.x,y:b.y});if(b.trail.length>5)b.trail.shift();b.x+=b.vx;b.y+=b.vy;b.vx*=.997;b.vy*=.997;b.spin+=dt*14;
+  if(b.x<18||b.x>462){b.vx*=-.88;b.x=Math.max(18,Math.min(462,b.x));b.bounces++;}if(b.y<31||b.y>239){b.vy*=-.88;b.y=Math.max(31,Math.min(239,b.y));b.bounces++;}
+  for(const p of players){if(p.id===b.lastOwner||p.invuln>0)continue;const d=Math.hypot(b.x-p.x,b.y-p.y);if(d<15){if(p.catchWindow>0&&(!p.heldBall||p.stock<startBallsFor(p)-1)){b.flying=false;b.vx=b.vy=0;p.catchWindow=0;if(p.heldBall){p.stock++;b.dead=true;b.heldBy=-1;}else{b.heldBy=p.id;p.heldBall=b;}floatText(p.x,p.y-16,'NICE CATCH!',COLORS.cyan);for(let i=0;i<7;i++)particles.push({x:p.x,y:p.y,vx:(Math.random()-.5)*3,vy:(Math.random()-.5)*3,life:.38,color:COLORS.cyan,size:2});}else{p.lives--;p.hitFlash=.34;p.stun=.16;if(mode==='cpu'&&b.lastOwner===0&&p.id===1)awardCoins(8,'CLEAN HIT');b.flying=false;b.vx=b.vy=0;b.heldBy=-1;b.x=Math.max(27,Math.min(453,b.x));b.y=Math.max(36,Math.min(234,b.y));floatText(p.x,p.y-14,'BONK!','#ff8f8f');for(let i=0;i<10;i++)particles.push({x:p.x,y:p.y,vx:(Math.random()-.5)*3,vy:(Math.random()-.5)*3,life:.35,color:COLORS.yellow,size:2});}break;}}
+  if(b.flying&&(b.age>3.7||b.bounces>=5||Math.hypot(b.vx,b.vy)<.75)){b.flying=false;b.age=0;b.vx=b.vy=0;b.x=Math.max(28,Math.min(452,b.x));b.y=Math.max(36,Math.min(234,b.y));b.heldBy=-1;}
+}
+function updateAI(dt){const p=players[1],inp=getAIInput(p,dt);updatePlayer(p,inp,dt);}
+function finishRound(winner){if(roundOver||gameOver)return;roundOver=true;roundEndTimer=1.8;if(winner!==-1){roundScores[winner]++;players[winner].score++;if(mode==='cpu'&&winner===0)awardCoins(20,'ROUND WIN');floatText(240,85,(winner===0?'RED':'BLUE')+' WINS ROUND!',winner===0?COLORS.pink:COLORS.blue);setToast((winner===0?'RED':'BLUE')+' TAKES THE ROUND!',1.5);}else{setToast('TIME UP — DRAW!',1.5);}updateHud();if(mode==='online'&&netRole==='host')syncSnapshot(true);}
+function updateGame(dt){if(mode==='online'&&netRole==='guest')return;if(mode==='online'&&netRole==='host'&&conn&&conn.open){lastSend+=dt;if(lastSend>.05){lastSend=0;syncSnapshot(false);}}if(paused||gameOver)return;if(roundOver){roundEndTimer-=dt;if(roundEndTimer<=0){if(roundScores[0]>=3||roundScores[1]>=3){gameOver=true;if(mode==='cpu'&&roundScores[0]>roundScores[1])awardCoins(35,'CHAMPION BONUS');setToast((roundScores[0]>roundScores[1]?'RED':'BLUE')+' WINS THE MATCH!',3);const s=Math.max(0,roundScores[0]*1000+roundScores[1]*200);if(s>highScore){highScore=s;localStorage.setItem('dodgeballduel-highscore',s);$('highScore').textContent=String(s).padStart(5,'0');}if(mode==='online'&&netRole==='host')syncSnapshot(true);}else startRound();}return;}
+  roundTimer+=dt;clock=Math.max(0,45-Math.floor(roundTimer));
+  let a=inputForHuman(0), b;
+  if(mode==='local')b=inputForHuman(1);else if(mode==='cpu')b=getAIInput(players[1],dt);else b=netRole==='host'?remoteInput:emptyInput();
+  updatePlayer(players[0],a,dt);updatePlayer(players[1],b,dt);balls.forEach(ball=>updateBall(ball,dt));balls=balls.filter(b=>!b.dead);
+  // Physical separation stops sprite overlap when the two sides meet at the center line.
+  if(Math.abs(players[1].x-players[0].x)<20){const mid=(players[0].x+players[1].x)/2;players[0].x=mid-10;players[1].x=mid+10;}
+  updateParticles(dt);updateHud();
+  if(players[0].lives<=0&&players[1].lives<=0)finishRound(-1);else if(players[0].lives<=0)finishRound(1);else if(players[1].lives<=0)finishRound(0);else if(clock<=0)finishRound(players[0].lives===players[1].lives?-1:players[0].lives>players[1].lives?0:1);
+}
+
+function updateParticles(dt){particles=particles.filter(p=>p.life>0);particles.forEach(p=>{p.x+=p.vx;p.y+=p.vy;p.vx*=.96;p.vy*=.96;p.life-=dt;});floatingTexts=floatingTexts.filter(t=>t.life>0);floatingTexts.forEach(t=>{t.y-=dt*14;t.life-=dt;});}
+function floatText(x,y,text,color){floatingTexts.push({x,y,text,color,life:.75});}
+function updateHud(){if(!players.length)return;$('leftLives').textContent='♥ '.repeat(Math.max(0,players[0].lives)).trim()||'—';$('rightLives').textContent='♥ '.repeat(Math.max(0,players[1].lives)).trim()||'—';$('roundLabel').textContent='R'+round+'  '+roundScores[0]+'-'+roundScores[1];$('timerLabel').textContent='00:'+String(clock).padStart(2,'0');}
+function publicSnapshot(notice=''){return {players:players.map(p=>({id:p.id,x:p.x,y:p.y,vx:p.vx,vy:p.vy,faceX:p.faceX,faceY:p.faceY,lives:p.lives,held:!!p.heldBall,stock:p.stock,dash:p.dash,invuln:p.invuln,catchWindow:p.catchWindow,hitFlash:p.hitFlash,anim:p.anim,stun:p.stun,throwWindup:p.throwWindup,throwAnim:p.throwAnim,throwDX:p.throwDX,throwDY:p.throwDY,score:p.score})),balls:balls.map(b=>({id:b.id,x:b.x,y:b.y,vx:b.vx,vy:b.vy,heldBy:b.heldBy,flying:b.flying,age:b.age,bounces:b.bounces,trail:b.trail,spin:b.spin,lastOwner:b.lastOwner})),round,clock,roundScores,roundOver,roundEndTimer,gameOver,paused,notice};}
+function syncSnapshot(force){if(!conn||!conn.open)return;try{conn.send({type:'state',state:publicSnapshot(force?'': '')});}catch{}}
+function getRenderState(){if(mode==='online'&&netRole==='guest'&&remoteSnapshot)return remoteSnapshot;return publicSnapshot();}
+
+// Low-resolution pixel-art rendering: canvas pixels stay crisp when scaled up.
+function rect(x,y,w,h,c){ctx.fillStyle=c;ctx.fillRect(Math.round(x),Math.round(y),Math.round(w),Math.round(h));}
+function line(x1,y1,x2,y2,c,w=1){ctx.strokeStyle=c;ctx.lineWidth=w;ctx.beginPath();ctx.moveTo(Math.round(x1)+.5,Math.round(y1)+.5);ctx.lineTo(Math.round(x2)+.5,Math.round(y2)+.5);ctx.stroke();}
+function text(str,x,y,color,size=8,align='left'){ctx.fillStyle=color;ctx.font=`bold ${size}px monospace`;ctx.textAlign=align;ctx.textBaseline='middle';ctx.fillText(str,x,y);ctx.textAlign='left';}
+function drawCourt(){rect(0,0,W,H,'#11152a');
+  // bleachers and arcade-gym backdrop
+  rect(0,0,W,28,'#292344');rect(0,242,W,28,'#292344');for(let y=3;y<26;y+=6){rect(0,y,W,2,y%2?'#454064':'#373259');for(let x=4;x<W;x+=14){rect(x,y+2,4,2,(x+y)%3?'#e95782':'#53d8ca');}}
+  for(let y=245;y<268;y+=6){rect(0,y,W,2,y%2?'#454064':'#373259');for(let x=4;x<W;x+=14){rect(x,y+2,4,2,(x+y)%3?'#53d8ca':'#e95782');}}
+  // court wood planks (compact court: x 70-410, y 52-218)
+  rect(0,28,W,214,'#171a35');for(let x=0;x<W;x+=16)rect(x,28,1,214,'#1b1f3d');
+  const L=20,R=460,T=33,B=236,CW=R-L,CH=B-T;
+  rect(L-6,T-5,CW+12,CH+11,'#0a2633');rect(L-1,T-1,CW+2,CH+2,'#1a6a61');for(let y=T;y<B;y+=12){const h=Math.min(11,B-y);rect(L,y,CW,h,((y-T)/12|0)%2?'#22766a':'#206e64');for(let x=L+2;x<R;x+=44)line(x,y,x,y+h-1,'#2f8072',1);}
+  // boundaries and zones
+  ctx.strokeStyle=COLORS.line;ctx.lineWidth=2;ctx.strokeRect(L,T,CW,CH);line(240,T+1,240,B-1,'#ffe8a8',2);for(let y=T+6;y<B-2;y+=14){line(238,y,242,y+5,'#ffe8a8',1);}line(140,T+2,140,B-2,'#9cd5b8',1);line(340,T+2,340,B-2,'#9cd5b8',1);
+  // service zones
+  ctx.strokeStyle='#d1e7b1';ctx.lineWidth=1;ctx.strokeRect(L+12,T+19,94,CH-38);ctx.strokeRect(R-106,T+19,94,CH-38);
+  // center emblem
+  rect(211,114,58,42,'#195950');ctx.strokeStyle='#ffe8a8';ctx.lineWidth=1;ctx.strokeRect(214,117,52,36);text('D',240,135,'#ffe8a8',19,'center');
+  // signs and light bloom blocks
+  rect(38,18,80,7,'#ff5579');text('ARCADE SPORTS',78,21,'#fff1b8',6,'center');rect(362,18,80,7,'#54e6d0');text('DODGEBALL DUEL',402,21,'#15162b',6,'center');
+}
+function drawPlayer(p,displayMode){ctx.save();ctx.translate(Math.round(p.x),Math.round(p.y));ctx.scale(1.5,1.5);ctx.translate(-Math.round(p.x),-Math.round(p.y));try{drawPlayer0(p,displayMode);}finally{ctx.restore();}}
+function drawPlayer0(p,displayMode){const color=p.id===0?COLORS.pink:COLORS.blue, dark=p.id===0?'#a92f60':'#2859a2', skin=p.id===0?'#ffca98':'#d99069';
+  const x=Math.round(p.x),y=Math.round(p.y);const faceX=p.faceX|| (p.id===0?1:-1),faceY=p.faceY||0;const blink=p.invuln>0&&Math.floor(performance.now()/70)%2===0;if(blink)return;
+  const throwing=(p.throwAnim||0)>0;const progress=throwing?Math.max(0,Math.min(1,1-p.throwAnim/.38)):0;
+  rect(x-8,y+7,16,4,'#123d3a');rect(x-5,y+8,10,2,'#0c2b2b');
+  if(p.dash>0){rect(x-faceX*11-2,y-faceY*8-2,8,5,p.id===0?'#923f82':'#2e6fa8');}
+  const step=Math.sin((p.anim||0)*1.4)*(Math.abs(p.vx||0)+Math.abs(p.vy||0)>.35?2:0);
+  rect(x-6,y+1,5,8,'#f2bc87');rect(x+1,y+1,5,8,'#f2bc87');rect(x-7,y+7+step,6,3,'#28223b');rect(x+1,y+7-step,7,3,'#28223b');rect(x-7,y+7+step,5,1,'#fff1b8');rect(x+2,y+7-step,5,1,'#fff1b8');
+  // Small body lean and recoil frames make the throw readable in the pixel animation.
+  const lean=throwing?(p.throwWindup>0?-Math.round(faceX*3):Math.round(faceX*3*Math.sin(Math.max(0,Math.min(1,(progress-.36)/.64))*1.15))):0;
+  rect(x-8+lean,y-7,16,13,dark);rect(x-7+lean,y-9,14,13,color);rect(x-5+lean,y-7,10,9,color);rect(x-2+lean,y-7,4,2,'#fff1b8');rect(x-1+lean,y-3,3,3,'#fff1b8');
+  // Animate the throwing arm from a visible pull-back to a full forward extension.
+  const shoulderX=x+faceX*3+lean, shoulderY=y-6;
+  const wind=throwing&&p.throwWindup>0;
+  const ext=!throwing?7:(wind?-10+progress*2:Math.round(5+Math.max(0,Math.min(1,(progress-.37)/.63))*17));
+  const wristX=x+Math.round(faceX*(7+ext))+lean;
+  const wristY=y-5+Math.round(faceY*6)+(wind?-4:throwing?-Math.round(Math.min(1,(progress-.37)/.63)*5):0);
+  const elbowX=x+Math.round(faceX*(3+(wind?-3:throwing?6:1)))+lean;
+  const elbowY=y-4+(wind?-2:throwing?-1:2);
+  // Off-hand stays close to the face as a guard; throwing hand is visibly animated.
+  line(x-faceX*5,y-6,x-faceX*7,y-2,skin,3);line(x-faceX*7,y-2,x-faceX*8,y-1,'#f5d047',4);
+  line(shoulderX,shoulderY,elbowX,elbowY,skin,4);line(elbowX,elbowY,wristX,wristY,skin,4);
+  rect(wristX-4,wristY-3,8,7,'#b27b28');rect(wristX-3,wristY-3,7,6,'#f5d047');rect(wristX-2,wristY-2,5,4,'#ffed72');rect(wristX-2,wristY+2,5,1,'#b98729');
+  if(p.held){const ballY=wristY-(wind?3:0);rect(wristX-5,ballY-8,11,10,'#a85c36');rect(wristX-4,ballY-7,9,9,COLORS.yellow);rect(wristX-2,ballY-5,5,5,'#fff1b8');rect(wristX-3,ballY-3,7,1,'#db8b3b');}
+  // Head, hair, eye, nose and mouth are crisp pixel shapes.
+  rect(x-6,y-17,12,11,skin);rect(x-7,y-18,14,6,COLORS.hair);rect(x-7,y-15,3,6,COLORS.hair);rect(x+4,y-15,3,5,COLORS.hair);
+  const eyeX=x+Math.round(faceX*2);const eyeY=y-12+Math.round(faceY*1);rect(eyeX-1,eyeY,2,2,'#201b31');rect(x+Math.round(faceX*3),y-10,2,2,'#8a4a43');rect(x-3,y-7,6,1,'#8d514b');
+  text(p.id===0?'7':'4',x+lean,y-1,'#fff1b8',5,'center');if(p.hitFlash>0){rect(x-12,y-22,24,2,'#fff1b8');}
+  if(p.catchWindow>0){ctx.strokeStyle=COLORS.cyan;ctx.lineWidth=1;ctx.strokeRect(x-11,y-22,22,31);}
+}
+function drawBall(b){ctx.save();ctx.translate(b.x,b.y);ctx.scale(1.35,1.35);ctx.translate(-b.x,-b.y);try{drawBall0(b);}finally{ctx.restore();}}
+function drawBall0(b){if(b.trail){b.trail.forEach((t,i)=>{rect(t.x-1,t.y-1,3,3,i<2?'#b36f57':'#d99c45');});}if(b.flying){rect(b.x-5,b.y-4,10,8,'#bf7a30');rect(b.x-4,b.y-5,8,9,COLORS.yellow);rect(b.x-3,b.y-4,6,7,'#fff2a0');rect(b.x-3,b.y,7,2,'#ed9943');rect(b.x-1,b.y-5,2,9,'#d98635');}else if(b.heldBy<0){rect(b.x-5,b.y-4,10,8,'#a85c36');rect(b.x-4,b.y-5,8,8,COLORS.yellow);rect(b.x-3,b.y-4,6,6,'#fff0a0');rect(b.x-3,b.y,7,2,'#e99a42');rect(b.x-1,b.y-5,2,8,'#d98635');}}
+function drawParticles(arr){arr.forEach(p=>{ctx.globalAlpha=Math.max(0,Math.min(1,p.life*3));rect(p.x,p.y,p.size||2,p.size||2,p.color);});ctx.globalAlpha=1;}
+function ps0(s,i){const p=s.players[i];return p?(p.stock||0)+(p.held?1:0):0;}
+function drawWorld(s){drawCourt();const ps=s.players||[];const bs=s.balls||[]; // held balls are rendered at the holder's glove
+  bs.forEach(drawBall);ps.forEach(drawPlayer);drawParticles(particles);floatingTexts.forEach(t=>{ctx.globalAlpha=Math.min(1,t.life*2);text(t.text,t.x,t.y,t.color,9,'center');});ctx.globalAlpha=1;
+  // mini status/round panel on court floor
+  rect(176,37,128,14,'#141832');text('ROUND '+s.round+'   '+s.roundScores[0]+' : '+s.roundScores[1],240,44,COLORS.yellow,7,'center');
+  text('BALLS x'+((ps0(s,0)))+'',28,44,COLORS.pink,7,'left');text('BALLS x'+ps0(s,1),452,44,COLORS.blue,7,'right');
+  if(s.roundOver){rect(127,101,226,61,'#141832');ctx.strokeStyle=COLORS.yellow;ctx.lineWidth=2;ctx.strokeRect(127,101,226,61);text('ROUND OVER',240,117,COLORS.yellow,14,'center');text(s.players[0].lives===s.players[1].lives?'DRAW!':s.players[0].lives>s.players[1].lives?'RED TAKES IT!':'BLUE TAKES IT!',240,136,COLORS.cream,9,'center');text('GET READY FOR NEXT ROUND',240,150,COLORS.cyan,6,'center');}
+  if(s.gameOver){rect(100,94,280,80,'#141832');ctx.strokeStyle=COLORS.yellow;ctx.lineWidth=2;ctx.strokeRect(100,94,280,80);text('MATCH COMPLETE',240,113,COLORS.yellow,14,'center');text(s.roundScores[0]>s.roundScores[1]?'RED ROCKETS WIN!':'BLUE BOLTS WIN!',240,133,COLORS.cream,10,'center');text('PRESS RESTART TO PLAY AGAIN',240,153,COLORS.cyan,7,'center');}
+  if(s.paused){rect(170,109,140,48,'#141832');ctx.strokeStyle=COLORS.cyan;ctx.strokeRect(170,109,140,48);text('PAUSED',240,127,COLORS.yellow,14,'center');text('PRESS ESC TO RESUME',240,144,COLORS.cream,7,'center');}
+}
+function render(){if(state!=='game')return;ctx.imageSmoothingEnabled=false;ctx.clearRect(0,0,W,H);const s=getRenderState();drawWorld(s);if(mode==='cpu'&&pointer.inside&&players[0]&&players[0].heldBall&&!gameOver){ctx.strokeStyle='#fff1b8';ctx.globalAlpha=.55;ctx.beginPath();ctx.moveTo(players[0].x,players[0].y);ctx.lineTo(pointer.x,pointer.y);ctx.stroke();ctx.globalAlpha=1;}}
+function loop(now){const dt=Math.min(.033,(now-lastTime)/1000||0);lastTime=now;if(state==='game'){if(mode==='online'&&netRole==='guest'&&conn&&conn.open&&!paused){lastInputSend+=dt;if(lastInputSend>.012){lastInputSend=0;conn.send({type:'input',input:inputForHuman(0)});}}if(toastTimer>0){toastTimer-=dt;if(toastTimer<=0)$('toast').classList.remove('show');}if(!(mode==='online'&&netRole==='guest'))updateGame(dt);if(mode==='online'&&netRole==='guest'&&remoteSnapshot){$('leftLives').textContent='♥ '.repeat(Math.max(0,remoteSnapshot.players[0].lives)).trim()||'—';$('rightLives').textContent='♥ '.repeat(Math.max(0,remoteSnapshot.players[1].lives)).trim()||'—';$('roundLabel').textContent='R'+remoteSnapshot.round+' '+remoteSnapshot.roundScores[0]+'-'+remoteSnapshot.roundScores[1];$('timerLabel').textContent='00:'+String(remoteSnapshot.clock).padStart(2,'0');}render();}pressed.clear();requestAnimationFrame(loop);}
+requestAnimationFrame(loop);
+
+// Mobile action controls. Hold directional buttons for movement; the action button picks up or throws.
+const touchState=new Set();const touchMap={touchUp:'w',touchDown:'s',touchLeft:'a',touchRight:'d'};
+Object.entries(touchMap).forEach(([id,k])=>{const el=$(id);const down=e=>{e.preventDefault();touchState.add(k);keys.add(k);};const up=e=>{e.preventDefault();touchState.delete(k);keys.delete(k);};el.addEventListener('pointerdown',down);el.addEventListener('pointerup',up);el.addEventListener('pointercancel',up);el.addEventListener('pointerleave',e=>{if(e.buttons)up(e);});});
+$('touchAction').addEventListener('pointerdown',e=>{e.preventDefault();pressed.add(mode==='local'?'enter':'e');});$('touchDodge').addEventListener('pointerdown',e=>{e.preventDefault();pressed.add('space');});
+// Local keyboard handling: in local mode player 2 uses right-side modifier keys.
+window.addEventListener('keydown',e=>{if(mode==='local'&&['ShiftRight','ControlRight'].includes(e.code)){const k=e.code==='ShiftRight'?'shiftright':'controlright';if(!keys.has(k))pressed.add(k);keys.add(k);}});
+window.addEventListener('keyup',e=>{if(e.code==='ShiftRight')keys.delete('shiftright');if(e.code==='ControlRight')keys.delete('controlright');});
+// Fix modifier-aware control checks for local Player 2.
+const _inputForHuman=inputForHuman;
+inputForHuman=function(id){if(mode==='local'&&id===1){const i=emptyInput();i.x=(keys.has('arrowright')?1:0)-(keys.has('arrowleft')?1:0);i.y=(keys.has('arrowdown')?1:0)-(keys.has('arrowup')?1:0);i.action=pressed.has('enter');i.dodge=pressed.has('shiftright')||pressed.has('shift');i.catch=pressed.has('controlright')||pressed.has('control');return i;}return _inputForHuman(id);};
+// Release right-side modifiers reliably.
+window.addEventListener('keyup',e=>{if(e.code==='ShiftRight')keys.delete('shiftright');if(e.code==='ControlRight')keys.delete('controlright');});
+
+})();
+</script>
+</body>
+</html>
